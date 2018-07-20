@@ -17,7 +17,8 @@ class Dashboard extends Component{
         this.state = {
         data: [],
         totalDetails: [],
-        startDate:  moment()
+        startDate:  moment(),
+        weeklyDetails: []
      };         
      this.handleChange = this.handleChange.bind(this);		
      this.getAPi(moment(this.state.startDate).format("YYYY-MM-DD"));    
@@ -47,21 +48,20 @@ class Dashboard extends Component{
 //                     return json;
 //      });
 
-  fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate="+date)
+  fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+date)
                    .then( (response) => {
                         return response.json() })   
                         .then((json) => {
                             if(json!="False"){
                                 this.setState({
                                     data: json,
-                                    totalDetails: json.totalDetails                              
+                                    totalDetails: json.totalDetails,
+                                    weeklyDetails: json.weeklyDetails                            
                                 })
                             }   
                             else{
                                 alert("No Data Available");
-                            }                         
-                            // this.intiainitializeChart();
-                            // console.log(this.state.data + "Inside Dashboard API call");
+                            }                 
                             return json;
              }); 
 
@@ -114,7 +114,7 @@ class Dashboard extends Component{
                     <TimeLine data = {this.state.totalDetails} />                                     
                 </div>
                 <div style={{float: 'right', width: '47%', marginRight: '25px', right:'25px' }}>
-                    <HourUpdate />   
+                    <HourUpdate data = {this.state.weeklyDetails} />   
                     {/* <ChartHourUpdate /> */}
                 </div>
             </div>
@@ -189,7 +189,7 @@ class TimeLine extends Component {
         return(
             <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden', overflowY: 'scroll'}}>
                 <p className="card-header" style={{color: 'grey'}}>Cutting Events</p>
-                <div style={{marginTop: '10px', backgroundColor:'#ededee'}}>                 
+                <div style={{marginTop: '10px', backgroundColor:'#ededee', height:'500px', overflowY:'scroll' }}>                 
                     <Timeline>  
                     {propsData.map((element) =>{return ([
                         <TimelineEvent title="Cut Started" createdAt={element.startTime} icon={<i className="	fa fa-arrow-circle-up" style={{fontSize: '20px'}}></i>} iconColor="#6fba1c"></TimelineEvent>,
@@ -226,24 +226,24 @@ class TimeLine extends Component {
 class HourUpdate extends Component{
     constructor(){
         super(); 
-        this.state = {
-            items : []
-        }                 
+        // this.state = {
+        //     items : []
+        // }                 
     }
 
     componentDidMount(){    
-        fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate=2018-07-18")
-           .then( (response) => {
-                return response.json() })   
-                .then((json) => {
-                    this.setState({
-                        items: json.weeklyDetails
-                    })
-                    console.log("HourUpdate");
-                    console.log(this.state.items);
-                    this._intiainitializeChart(this.state.items);                    
-                    return json;
-     }); 
+//         fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
+//            .then( (response) => {
+//                 return response.json() })   
+//                 .then((json) => {
+//                     this.setState({
+//                         items: json.weeklyDetails
+//                     })
+//                     console.log("HourUpdate");
+//                     console.log(this.state.items);
+//                     this._intiainitializeChart(this.state.items);                    
+//                     return json;
+//      }); 
     }
 
     _intiainitializeChart(details){        
@@ -265,7 +265,7 @@ class HourUpdate extends Component{
                 title : {
                     text: 'Days'
                 },
-                type: 'date'
+                type: 'category'
             },
             yAxis: {
                 title: {
@@ -296,7 +296,10 @@ class HourUpdate extends Component{
         });
     }
 
-    render(){                    
+    render(){   
+        if(this.props.data.length != 0){
+            this._intiainitializeChart(this.props.data);
+        }               
         return(
             <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden', overflowY: 'scroll'}}>
                 <p className="card-header" style={{color: 'grey'}}>Cutting Machine Events</p>
@@ -587,7 +590,7 @@ class Home extends Component{
         
     }
     componentDidMount(){
-        fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate=2018-07-18")
+        fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
            .then( (response) => {
                 return response.json() })   
                 .then((json) => {

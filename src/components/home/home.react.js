@@ -3,6 +3,7 @@ import './home.css';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
 import * as signalR from '@aspnet/signalr';
+import moment from 'moment'
 
 class Home extends Component{
     constructor(props){
@@ -14,7 +15,7 @@ class Home extends Component{
             cut: 'Ideal'
         };
             this.connection = new signalR.HubConnectionBuilder()
-                    .withUrl("http://localhost/CuttingMachine/cuttinghub")
+                    .withUrl("http://10.235.33.246/CuttingMachine/cuttinghub")
                     .build(); 
             this.connection.on("ReceiveOrderUpdate", (update) => {
                 console.log(update);
@@ -38,7 +39,7 @@ class Home extends Component{
         
     }
     componentDidMount(){
-        fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate=2018-07-18")
+        fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
            .then( (response) => {
                 return response.json() })   
                 .then((json) => {
@@ -52,7 +53,7 @@ class Home extends Component{
     }    
     callApiStart(){
         console.log("Start");
-        fetch("http://localhost/CuttingMachine/api/StartTrack")
+        fetch("http://10.235.33.246/CuttingMachine/api/StartTrack")
         .then((response)=> {
             return response
         })
