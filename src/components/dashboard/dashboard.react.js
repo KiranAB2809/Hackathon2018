@@ -18,7 +18,8 @@ class Dashboard extends Component{
         data: [],
         totalDetails: [],
         startDate:  moment(),
-        weeklyDetails: []
+        weeklyDetails: [],
+        hourDetails: []
      };         
      this.handleChange = this.handleChange.bind(this);		
      this.getAPi(moment(this.state.startDate).format("YYYY-MM-DD"));    
@@ -35,7 +36,7 @@ class Dashboard extends Component{
        };
        getAPi(date)
     {
-        debugger;
+        // debugger;
         // alert("api :"+date);
         // alert("datechange");
 //         fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+date)
@@ -48,7 +49,7 @@ class Dashboard extends Component{
 //                     return json;
 //      });
 
-  fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+date)
+  fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate="+date)
                    .then( (response) => {
                         return response.json() })   
                         .then((json) => {
@@ -56,7 +57,8 @@ class Dashboard extends Component{
                                 this.setState({
                                     data: json,
                                     totalDetails: json.totalDetails,
-                                    weeklyDetails: json.weeklyDetails                            
+                                    weeklyDetails: json.weeklyDetails,
+                                    hourDetails: json.hourDetails                  
                                 })
                             }   
                             else{
@@ -107,7 +109,7 @@ class Dashboard extends Component{
             <div style={{marginTop: '52px' }}>
             <Home />
             <div style={{marginLeft:'50px'}}>
-                 <DatePicker    selected={this.state.startDate}  onChange ={this.handleChange}  />
+                 <DatePicker selected={this.state.startDate}  onChange ={this.handleChange}  />
             </div>
                 <div style={{float: 'left', width: '47%'}}>  
                     <PartsOverview data = {this.state.data} />
@@ -115,7 +117,7 @@ class Dashboard extends Component{
                 </div>
                 <div style={{float: 'right', width: '47%', marginRight: '25px', right:'25px' }}>
                     <HourUpdate data = {this.state.weeklyDetails} />   
-                    {/* <ChartHourUpdate /> */}
+                    <ChartHourUpdate data = {this.state.hourDetails} />
                 </div>
             </div>
         )           
@@ -187,9 +189,9 @@ class TimeLine extends Component {
         console.log("TimelIne");
         console.log(propsData);   
         return(
-            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden', overflowY: 'scroll'}}>
+            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden'}}>
                 <p className="card-header" style={{color: 'grey'}}>Cutting Events</p>
-                <div style={{marginTop: '10px', backgroundColor:'#ededee', height:'500px', overflowY:'scroll' }}>                 
+                <div style={{marginTop: '10px', backgroundColor:'#ededee', maxHeight:'500px', overflowY:'scroll' }}>                 
                     <Timeline>  
                     {propsData.map((element) =>{return ([
                         <TimelineEvent title="Cut Started" createdAt={element.startTime} icon={<i className="	fa fa-arrow-circle-up" style={{fontSize: '20px'}}></i>} iconColor="#6fba1c"></TimelineEvent>,
@@ -259,7 +261,7 @@ class HourUpdate extends Component{
                 marginRight: 10                
             },
             title: {
-                text: 'Weekly Update'
+                text: 'Daily Cuts'
             },
             xAxis: {
                 title : {
@@ -301,7 +303,7 @@ class HourUpdate extends Component{
             this._intiainitializeChart(this.props.data);
         }               
         return(
-            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden', overflowY: 'scroll'}}>
+            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden'}}>
                 <p className="card-header" style={{color: 'grey'}}>Cutting Machine Events</p>
                 <div style={{marginTop: '10px', backgroundColor:'#ededee'}} id="graph">
 
@@ -317,11 +319,12 @@ class ChartHourUpdate extends Component{
         super();                          
     }
 
-    componentDidMount(){
-        this.intiainitializeChart();
+    componentDidMount(){        
+        // var data = [{"runningTime":"00:00:00","name":"12:00:00","y":0},{"runningTime":"00:00:00","name":"13:00:00","y":0},{"runningTime":"00:01:23","name":"14:00:00","y":15},{"runningTime":"00:01:23","name":"15:00:00","y":10},{"runningTime":"00:01:23","name":"16:00:00","y":12}];
+        // this.intiainitializeChart(data);
     }
 
-    intiainitializeChart(){
+    intiainitializeChart(data){
         Highcharts.getOptions({
             global: {
                 useUTC: false
@@ -329,7 +332,7 @@ class ChartHourUpdate extends Component{
         });
         Highcharts.chart('graph1', {
             chart: {
-                type: 'column',
+                type: 'spline',
                 animation: Highcharts.svg,
                 marginRight: 10,
                 events: {
@@ -340,15 +343,17 @@ class ChartHourUpdate extends Component{
                 }
             },
             title: {
-                text: ''
+                text: 'Hourly Update'
             },
             xAxis: {
-                type: 'datetime',
-                tickPixelInterval: 250
+                title : {
+                    text: 'Time (in Hrs)'
+                },
+                type: 'category'
             },
             yAxis: {
                 title: {
-                    text: ''
+                    text: 'No of Cuts'
                 },
                 plotLines: [{
                     value: 0,
@@ -357,7 +362,7 @@ class ChartHourUpdate extends Component{
                 }]
             },
             tooltip: {
-                enabled: false
+                pointFormat: 'Cuts: <span style="color:{point.color}">{point.y}</span><br/>Running Time: <span style="color:{point.color}">{point.runningTime}</span><br/>'
             },
             legend: {
                 enabled: false
@@ -366,27 +371,18 @@ class ChartHourUpdate extends Component{
                 enabled: false
             },
             series: [{
-                name: 'Random data',
-                data: (function () {
-                    var data = [],
-                        time = (new Date()).getTime(),
-                        i;
-        
-                    for (i = -19; i <= 0; i += 1) {
-                        data.push({
-                            x: time + i * 1000,
-                            y: Math.random()
-                        });
-                    }
-                    return data;
-                }())
+                name: 'Hourly Cuts',
+                data: data
             }]
         });
     }
 
-    render(){        
+    render(){   
+        if(this.props.data.length != 0){
+            this.intiainitializeChart(this.props.data);
+        }     
         return(
-            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden', overflowY: 'scroll'}}>
+            <div className="halfDiv dashboard-card" style={{padding:'15px', maxHeight: '50%', overflow: 'hidden'}}>
                 <p className="card-header" style={{color: 'grey'}}>Cutting Machine Events</p>
                 <div style={{marginTop: '10px', backgroundColor:'#ededee'}} id="graph1">
 
@@ -563,34 +559,40 @@ class Home extends Component{
             items : [],
             status : false,
             count : '',
-            cut: 'Ideal'
+            cut: 'Idle'
         };
-            // this.connection = new signalR.HubConnectionBuilder()
-            //         .withUrl("http://localhost/CuttingMachine/cuttinghub")
-            //         .build(); 
-            // this.connection.on("ReceiveOrderUpdate", (update) => {
-            //     console.log(update);
-            //     this.setState({status : update})
-            //     if (this.state.status == "false") {
-            //         this.setState({
-            //             count: this.state.count + 1,
-            //             cut: 'Ideal'
-            //         })                           
-            //     } 
-            //     else if(this.state.status == "true") {
-            //         this.setState({
-            //             cut: 'Cutting'
-            //         })
-            //     }
+            this.connection = new signalR.HubConnectionBuilder()
+                    .withUrl("http://localhost/CuttingMachine/cuttinghub")
+                    .build(); 
+            this.connection.on("ReceiveOrderUpdate", (update) => {
+                console.log(update);
+                this.setState({status : update})
+                if (this.state.status == "false") {
+                    this.setState({
+                        count: this.state.count + 1,
+                        cut: 'Idle'
+                    })                           
+                } 
+                else if(this.state.status == "true") {
+                    this.setState({
+                        cut: 'Cutting'
+                    })
+                }
     
-            // }); 
-            // this.connection.start()
-            // .catch(err => console.error(err.toString())); 
+            }); 
+            this.connection.on("SaturationNotify", (notify) => {
+                this.setState({notify : notify})
+                if(this.state.notify == "true") {
+                    alert("Machine is Idle for more than 30 seconds!")
+                }
+            }); 
+            this.connection.start()
+            .catch(err => console.error(err.toString())); 
          
         
     }
     componentDidMount(){
-        fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
+        fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
            .then( (response) => {
                 return response.json() })   
                 .then((json) => {
@@ -598,33 +600,33 @@ class Home extends Component{
                         items: json,
                         count: json.count
                     })
-                    console.log(this.state.items);
+                    // console.log(this.state.items);
                     return json;
      });
     }    
-    // callApiStart(){
-    //     console.log("Start");
-    //     fetch("http://localhost/CuttingMachine/api/StartTrack")
-    //     .then((response)=> {
-    //         return response
-    //     })
-    //     .then((res) => {
-    //         console.log(res)            
+    callApiStart(){
+        console.log("Start");
+        fetch("http://localhost/CuttingMachine/api/StartTrack")
+        .then((response)=> {
+            return response
+        })
+        .then((res) => {
+            // console.log(res)            
             
-    //     })               
-    // }
-    // callApiStop(){
-    //     console.log("Stop");
-    //     fetch("http://localhost/CuttingMachine/api/StopTrack")
-    //     .then((response)=> {
-    //         return response
-    //     })
-    //     .then((res) => {
-    //         console.log(res)
-    //         // this.connection.stop();
-    //     })
+        })               
+    }
+    callApiStop(){
+        console.log("Stop");
+        fetch("http://localhost/CuttingMachine/api/StopTrack")
+        .then((response)=> {
+            return response
+        })
+        .then((res) => {
+            // console.log(res)
+            // this.connection.stop();
+        })
 
-    // }
+    }
 
     render(){              
         return(

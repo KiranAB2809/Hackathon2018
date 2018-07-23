@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import './home.css';
 import ReactDOM from 'react-dom';
+import {CSVLink} from 'react-csv';
 import { Link } from 'react-router-dom';
 import * as signalR from '@aspnet/signalr';
 import moment from 'moment'
@@ -12,13 +13,15 @@ class Home extends Component{
             items : [],
             status : false,
             count : '',
-            cut: 'Ideal'
+            cut: 'Idle',
+            notify : false,
+            excelData : []
         };
             this.connection = new signalR.HubConnectionBuilder()
-                    .withUrl("http://10.235.33.246/CuttingMachine/cuttinghub")
+                    .withUrl("http://localhost/CuttingMachine/cuttinghub")
                     .build(); 
             this.connection.on("ReceiveOrderUpdate", (update) => {
-                console.log(update);
+                // console.log(update);
                 this.setState({status : update})
                 if (this.state.status == "false") {
                     this.setState({
@@ -32,6 +35,12 @@ class Home extends Component{
                     })
                 }
     
+            });
+            this.connection.on("SaturationNotify", (notify) => {
+                this.setState({notify : notify})
+                if(this.state.notify == "true") {
+                    alert("Machine is Idle for more than 30 seconds!")
+                }
             }); 
             this.connection.start()
             .catch(err => console.error(err.toString())); 
@@ -39,7 +48,7 @@ class Home extends Component{
         
     }
     componentDidMount(){
-        fetch("http://10.235.33.246/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
+        fetch("http://localhost/CuttingMachine/GetTodayDetails?fordate="+moment().format("YYYY-MM-DD"))
            .then( (response) => {
                 return response.json() })   
                 .then((json) => {
@@ -50,10 +59,20 @@ class Home extends Component{
                     console.log(this.state.items);
                     return json;
      });
+        fetch("http://10.235.33.246/cuttingmachine/GetMonthlyDetails?forMonth=2018-07")
+        .then((response) => {
+            return response.json()             
+        })
+        .then((json) => {
+            this.setState({
+                excelData: json.dailyDetails
+            })
+            return json;
+        });
     }    
     callApiStart(){
         console.log("Start");
-        fetch("http://10.235.33.246/CuttingMachine/api/StartTrack")
+        fetch("http://localhost/CuttingMachine/api/StartTrack")
         .then((response)=> {
             return response
         })
@@ -94,6 +113,9 @@ class Home extends Component{
                     <th>
                         UserID
                     </th>
+                    <th>  
+                        Generate Report                      
+                    </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -111,6 +133,9 @@ class Home extends Component{
                     <td>
                         A242231
                     </td>
+                    <td style={{width: '20%'}} >
+                        <CSVLink data={this.state.excelData} filename={"MonthlyReport.csv"} className="btn btn-secondary" >Monthly Report</CSVLink>
+                    </td>
                 </tr>
                 <tr>
                 <td align="center">
@@ -125,6 +150,7 @@ class Home extends Component{
                     <td>
                         A242230
                     </td>
+                    <td></td>
                 </tr>
                 <tr>
                 <td align="center">
@@ -139,6 +165,7 @@ class Home extends Component{
                     <td>
                         A222983
                     </td>
+                    <td></td>
                 </tr>
                 </tbody>
             </table>

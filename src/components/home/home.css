@@ -1,6 +1,7 @@
 .btn{
-    outline: none;
-    margin: 10px;
-    width: 8%;
-    
+    width: 132px !important;
+    height: 33px !important;
+    /* margin-top: -5px !important; */
+    outline: none !important;
+    float: left;
 }

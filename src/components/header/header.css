@@ -53,3 +53,10 @@
     font-size: 15px;
     font-weight: bolder;
 }
+.btn{
+    width: 132px !important;
+    height: 33px !important;
+    margin-top: -5px !important;
+    outline: none !important;
+    float: right;
+}
