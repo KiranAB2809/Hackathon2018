@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom';
 import {CSVLink} from 'react-csv';
 import { Link } from 'react-router-dom';
 import * as signalR from '@aspnet/signalr';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import moment from 'moment'
 
 class Home extends Component{
@@ -59,7 +61,7 @@ class Home extends Component{
                     console.log(this.state.items);
                     return json;
      });
-        fetch("http://10.235.33.246/cuttingmachine/GetMonthlyDetails?forMonth=2018-07")
+        fetch("http://10.235.33.246/cuttingmachine/GetMonthlyDetails?forMonth="+moment().format("YYYY-MM"))
         .then((response) => {
             return response.json()             
         })
@@ -133,7 +135,7 @@ class Home extends Component{
                     <td>
                         A242231
                     </td>
-                    <td style={{width: '20%'}} >
+                    <td style={{width: '20%'}}>
                         <CSVLink data={this.state.excelData} filename={"MonthlyReport.csv"} className="btn btn-secondary" >Monthly Report</CSVLink>
                     </td>
                 </tr>
